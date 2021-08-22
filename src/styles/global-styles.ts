@@ -15,27 +15,27 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    font-family: ${({ theme }) => theme.fonts.family.default};
+    font-family: ${({ theme }) => theme.font.family.default};
     font-size: 1.6rem;
     overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6{
-    font-family: ${({ theme }) => theme.fonts.family.secondary};
-    margin: ${({ theme }) => theme.spacing.big} 0;
+    font-family: ${({ theme }) => theme.font.family.secondary};
+    margin: ${({ theme }) => theme.spacings.large} 0;
   }
 
   p {
-    margin: ${({ theme }) => theme.spacing.medium} 0;
+    margin: ${({ theme }) => theme.spacings.medium} 0;
   }
 
   ul, ol {
-    margin: ${({ theme }) => theme.spacing.medium};
-    padding: ${({ theme }) => theme.spacing.medium};
+    margin: ${({ theme }) => theme.spacings.medium};
+    padding: ${({ theme }) => theme.spacings.medium};
   }
 
   a {
-    color: ${({ theme }) => theme.colors.secondaryColor};
+    color: ${({ theme }) => theme.colors.secondary};
   }
 
   .table {
