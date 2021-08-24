@@ -11,6 +11,11 @@ type NextAuthSession = {
   expiration: number;
 };
 
+type credentials = {
+  email: string;
+  password: string;
+};
+
 export default NextAuth({
   jwt: {
     signingKey: process.env['JWT_SIGNING_PRIVATE_KEY'],
@@ -23,11 +28,10 @@ export default NextAuth({
   providers: [
     Providers.Credentials({
       name: 'Strapi-auth',
-      credentials: {
-        email: { label: 'Email', type: 'text', placeholder: 'Digite seu userName' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
+      async authorize(credentials: credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
         try {
           const { login } = await gqlClient.request(GQL_MUTATION_AUTHENTICATE_USER, {
             email: credentials.email,

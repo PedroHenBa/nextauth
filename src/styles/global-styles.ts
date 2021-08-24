@@ -18,6 +18,7 @@ export const GlobalStyles = createGlobalStyle`
     font-family: ${({ theme }) => theme.font.family.default};
     font-size: 1.6rem;
     overflow-x: hidden;
+    background: ${({ theme }) => theme.colors.primary};
   }
 
   h1, h2, h3, h4, h5, h6{
