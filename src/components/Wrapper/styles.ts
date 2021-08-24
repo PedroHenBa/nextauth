@@ -6,5 +6,10 @@ export const Wrapper = styled.div`
     margin: 8rem auto;
     background: ${theme.colors.white};
     padding: ${theme.spacings.xlarge};
+
+    a {
+      text-decoration: none;
+      color: ${theme.colors.secondary};
+    }
   `}
 `;
