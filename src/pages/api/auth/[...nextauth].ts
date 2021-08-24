@@ -3,6 +3,14 @@ import Providers from 'next-auth/providers';
 import { gqlClient } from '../../../graphql/client';
 import { GQL_MUTATION_AUTHENTICATE_USER } from '../../../graphql/mutations/auth';
 
+type NextAuthSession = {
+  id: string;
+  name: string;
+  jwt: string;
+  email: string;
+  expiration: number;
+};
+
 export default NextAuth({
   jwt: {
     signingKey: process.env['JWT_SIGNING_PRIVATE_KEY'],
@@ -46,7 +54,7 @@ export default NextAuth({
     }),
   ],
   callbacks: {
-    jwt: async (token, user) => {
+    jwt: async (token: NextAuthSession, user: NextAuthSession) => {
       const isSignIn = !!user;
       const actualDateInSeconds = Math.floor(Date.now() / 1000);
       const tokenExpirationInSeconds = Math.floor(7 * 24 * 60 * 60);
@@ -55,6 +63,7 @@ export default NextAuth({
         if (!user.jwt || !user.name || !user.email || !user.id) {
           return Promise.resolve({});
         }
+        console.log(user);
         token.jwt = user.jwt;
         token.id = user.id;
         token.expiration = Math.floor(actualDateInSeconds + tokenExpirationInSeconds);
@@ -68,6 +77,18 @@ export default NextAuth({
         }
       }
       return Promise.resolve(token);
+    },
+    session: async (session, token: NextAuthSession) => {
+      if (!token.jwt || !token.name || !token.email || !token.id || !token.expiration) {
+        return null;
+      }
+      session.accessToken = token.jwt;
+      session.user = {
+        id: token.id,
+        name: token.name,
+        email: token.email,
+      };
+      return { ...session };
     },
   },
 });
