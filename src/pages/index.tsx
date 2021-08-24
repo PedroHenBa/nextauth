@@ -1,13 +1,22 @@
 import { GetServerSideProps } from 'next';
 import { useSession } from 'next-auth/client';
+import { Wrapper } from '../components/Wrapper';
+import { useEffect, useState } from 'react';
 
 export default function Index() {
-  const [session] = useSession();
+  const [session, loading] = useSession();
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    if (!loading) {
+      setName(session?.user?.name || 'ninguem');
+    }
+  }, [loading, session]);
 
   return (
-    <h1>
-      <span>Salve {session && JSON.stringify(session, null, 2)}</span>
-    </h1>
+    <Wrapper>
+      <h1>Ola {name}</h1>
+    </Wrapper>
   );
 }
 
