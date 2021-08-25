@@ -8,12 +8,7 @@ import { gqlClient } from '../graphql/client';
 import { GQL_QUERY_GET_POSTS } from '../graphql/queries/posts';
 import { useEffect, useState } from 'react';
 import { GQL_MUTATION_DELETE_POST } from '../graphql/mutations/post';
-
-export type StrapiPost = {
-  id?: string;
-  title: string;
-  content: string;
-};
+import { StrapiPost } from '../components/FormPost';
 
 export type PostsPageProps = {
   posts?: StrapiPost[];
