@@ -6,6 +6,8 @@ import { serverSideRedirect } from '../utils/server-side-redirect';
 import Link from 'next/link';
 import { gqlClient } from '../graphql/client';
 import { GQL_QUERY_GET_POSTS } from '../graphql/queries/posts';
+import { useEffect, useState } from 'react';
+import { GQL_MUTATION_DELETE_POST } from '../graphql/mutations/post';
 
 export type StrapiPost = {
   id?: string;
@@ -19,6 +21,12 @@ export type PostsPageProps = {
 
 export default function Posts({ posts = [] }: PostsPageProps) {
   const [session, loading] = useSession();
+  const [statePosts, setStatePosts] = useState(posts);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    setStatePosts(posts);
+  }, [posts]);
 
   if (!loading && !session) {
     return frontEndRedirect();
@@ -26,15 +34,38 @@ export default function Posts({ posts = [] }: PostsPageProps) {
 
   if (typeof window !== 'undefined' && loading) return null;
 
+  const handleDelete = async (id: string) => {
+    setDeleting(true);
+
+    try {
+      await gqlClient.request(
+        GQL_MUTATION_DELETE_POST,
+        { id },
+        {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      );
+
+      setStatePosts((s) => s.filter((p) => p.id !== id));
+    } catch (e) {
+      alert('Nao foi possivel deletar esse post');
+    }
+    setDeleting(false);
+  };
+
   return (
     <Wrapper>
       <h1>Ola {session.user.name}</h1>
 
-      {posts.map((post) => (
+      {statePosts.map((post) => (
         <p key={'post-' + post.id}>
           <Link href={`/${post.id}`}>
             <a>{post.title}</a>
-          </Link>
+          </Link>{' '}
+          |{' '}
+          <button disabled={deleting} onClick={() => handleDelete(post.id)}>
+            Excluir
+          </button>
         </p>
       ))}
     </Wrapper>
