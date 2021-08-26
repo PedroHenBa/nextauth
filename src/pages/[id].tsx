@@ -2,10 +2,9 @@ import { StrapiPost } from '../components/FormPost';
 import { PrivateComponent } from '../components/PrivateComponent';
 import { UpdatePostTemplate } from '../components/Templates/UpdatePostTemplate';
 import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/client';
-import { serverSideRedirect } from '../utils/server-side-redirect';
 import { gqlClient } from '../graphql/client';
 import { GQL_QUERY_GET_POST } from '../graphql/queries/posts';
+import { privateServerSideProps } from '../utils/private-server-side-props';
 
 export type PostPageProps = {
   post: StrapiPost;
@@ -20,13 +19,7 @@ export default function PostPage({ post }: PostPageProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  if (!session) {
-    return serverSideRedirect(context);
-  }
-
-  try {
+  return await privateServerSideProps(context, async (session) => {
     const { post } = await gqlClient.request(
       GQL_QUERY_GET_POST,
       { id: context.params.id },
@@ -41,7 +34,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         post,
       },
     };
-  } catch (e) {
-    return serverSideRedirect(context);
-  }
+  });
 };
