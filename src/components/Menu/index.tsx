@@ -16,7 +16,7 @@ export const Menu = () => {
 
   const handleClick = async (event: MouseEvent) => {
     event.preventDefault();
-    await signOut({ redirect: false });
+    await signOut({ redirect: true });
   };
   return (
     <Styled.Container>
