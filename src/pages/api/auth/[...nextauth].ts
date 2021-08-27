@@ -3,18 +3,15 @@ import Providers from 'next-auth/providers';
 import { gqlClient } from '../../../graphql/client';
 import { GQL_MUTATION_AUTHENTICATE_USER } from '../../../graphql/mutations/auth';
 
-type NextAuthSession = {
-  id: string;
-  name: string;
-  jwt: string;
-  email: string;
-  expiration: number;
-};
+type NextAuthSession = Record<string, string>;
 
 type credentials = {
   email: string;
   password: string;
 };
+
+const actualDateInSeconds = Math.floor(Date.now() / 1000);
+const tokenExpirationInSeconds = Math.floor(7 * 24 * 60 * 60);
 
 export default NextAuth({
   jwt: {
@@ -38,45 +35,39 @@ export default NextAuth({
             password: credentials.password,
           });
 
-          const { jwt, user } = login;
-          const { id, username, email } = user;
-
-          if (!jwt || !id || !username || !email) {
-            return null;
-          } else {
-            return {
-              jwt,
-              id,
-              name: username,
-              email,
-            };
-          }
+          return login;
         } catch (e) {
           console.log(e);
         }
       },
     }),
+    Providers.Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
   ],
   callbacks: {
-    jwt: async (token: NextAuthSession, user: NextAuthSession) => {
+    jwt: async (token: NextAuthSession, user, account) => {
       const isSignIn = !!user;
-      const actualDateInSeconds = Math.floor(Date.now() / 1000);
-      const tokenExpirationInSeconds = Math.floor(7 * 24 * 60 * 60);
 
       if (isSignIn) {
-        if (!user.jwt || !user.name || !user.email || !user.id) {
-          return Promise.resolve({});
+        if (account && account?.provider === 'google') {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/google/callback?access_token=${account?.accessToken}`,
+          );
+          const data = await response.json();
+          token = setToken(data);
+          return Promise.resolve(token);
+        } else {
+          token = setToken(user as StrapiLoginData);
+          return Promise.resolve(token);
         }
-        console.log(user);
-        token.jwt = user.jwt;
-        token.id = user.id;
-        token.expiration = Math.floor(actualDateInSeconds + tokenExpirationInSeconds);
       } else {
         if (!token?.expiration) {
           return Promise.resolve({});
         }
 
-        if (actualDateInSeconds >= token.expiration) {
+        if (actualDateInSeconds >= +token.expiration) {
           return Promise.resolve({});
         }
       }
@@ -96,3 +87,26 @@ export default NextAuth({
     },
   },
 });
+
+type StrapiUser = {
+  id: string;
+  username: string;
+  email: string;
+};
+
+type StrapiLoginData = {
+  jwt: string;
+  user: StrapiUser;
+};
+
+const setToken = (data: StrapiLoginData): NextAuthSession => {
+  if (!data || !data?.user || !data?.jwt) return {};
+
+  return {
+    jwt: data.jwt,
+    id: data.user.id,
+    name: data.user.username,
+    email: data.user.email,
+    expiration: `${actualDateInSeconds + tokenExpirationInSeconds}`,
+  };
+};
